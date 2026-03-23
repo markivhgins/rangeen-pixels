@@ -1,10 +1,11 @@
 -- ═══════════════════════════════════════════════════════════
--- Rangeen Pixels — DROP EVERYTHING & RECREATE
--- Run this in Supabase SQL Editor to start fresh.
--- WARNING: This deletes ALL data permanently.
+-- Rangeen Pixels — Full Schema
+-- Safe to run on an existing DB (uses IF NOT EXISTS).
+-- Only the DROP block at the top is destructive — comment it
+-- out if you want to preserve existing data.
 -- ═══════════════════════════════════════════════════════════
 
--- ── Drop all tables ───────────────────────────────────────────
+-- ── Drop all tables (comment out to preserve data) ───────────
 DROP TABLE IF EXISTS contact_messages  CASCADE;
 DROP TABLE IF EXISTS refresh_tokens    CASCADE;
 DROP TABLE IF EXISTS gear_loans        CASCADE;
@@ -22,7 +23,7 @@ DROP TABLE IF EXISTS members           CASCADE;
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ── Members ──────────────────────────────────────────────────
-CREATE TABLE members (
+CREATE TABLE IF NOT EXISTS members (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name            TEXT NOT NULL,
   email           TEXT NOT NULL UNIQUE,
@@ -39,7 +40,7 @@ CREATE TABLE members (
 );
 
 -- ── Member applications ───────────────────────────────────────
-CREATE TABLE applications (
+CREATE TABLE IF NOT EXISTS applications (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name         TEXT NOT NULL,
   email        TEXT NOT NULL,
@@ -52,7 +53,7 @@ CREATE TABLE applications (
 );
 
 -- ── Events ───────────────────────────────────────────────────
-CREATE TABLE events (
+CREATE TABLE IF NOT EXISTS events (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title        TEXT NOT NULL,
   location     TEXT,
@@ -67,7 +68,7 @@ CREATE TABLE events (
 );
 
 -- ── Event RSVPs ──────────────────────────────────────────────
-CREATE TABLE rsvps (
+CREATE TABLE IF NOT EXISTS rsvps (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id   UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
   member_id  UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
@@ -77,7 +78,7 @@ CREATE TABLE rsvps (
 );
 
 -- ── Workshops ────────────────────────────────────────────────
-CREATE TABLE workshops (
+CREATE TABLE IF NOT EXISTS workshops (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   icon         TEXT DEFAULT '◉',
   title        TEXT NOT NULL,
@@ -89,7 +90,7 @@ CREATE TABLE workshops (
 );
 
 -- ── Gallery photos ───────────────────────────────────────────
-CREATE TABLE photos (
+CREATE TABLE IF NOT EXISTS photos (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   member_id    UUID NOT NULL REFERENCES members(id),
   title        TEXT,
@@ -103,7 +104,7 @@ CREATE TABLE photos (
 );
 
 -- ── Gear ─────────────────────────────────────────────────────
-CREATE TABLE gear (
+CREATE TABLE IF NOT EXISTS gear (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   icon         TEXT DEFAULT '📷',
   name         TEXT NOT NULL,
@@ -115,7 +116,7 @@ CREATE TABLE gear (
 );
 
 -- ── Gear loans ───────────────────────────────────────────────
-CREATE TABLE gear_loans (
+CREATE TABLE IF NOT EXISTS gear_loans (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   gear_id      UUID NOT NULL REFERENCES gear(id),
   member_id    UUID NOT NULL REFERENCES members(id),
@@ -126,7 +127,7 @@ CREATE TABLE gear_loans (
 );
 
 -- ── Awards ───────────────────────────────────────────────────
-CREATE TABLE awards (
+CREATE TABLE IF NOT EXISTS awards (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title        TEXT NOT NULL,
   description  TEXT,
@@ -139,7 +140,7 @@ CREATE TABLE awards (
 );
 
 -- ── Announcements ────────────────────────────────────────────
-CREATE TABLE announcements (
+CREATE TABLE IF NOT EXISTS announcements (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   label      TEXT NOT NULL,
   is_active  BOOLEAN DEFAULT true,
@@ -149,7 +150,7 @@ CREATE TABLE announcements (
 );
 
 -- ── Contact messages ─────────────────────────────────────────
-CREATE TABLE contact_messages (
+CREATE TABLE IF NOT EXISTS contact_messages (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name       TEXT NOT NULL,
   email      TEXT NOT NULL,
@@ -159,8 +160,8 @@ CREATE TABLE contact_messages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── Auth tokens ───────────────────────────────────────────────
-CREATE TABLE refresh_tokens (
+-- ── Auth refresh tokens ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS refresh_tokens (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   member_id  UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
   token      TEXT NOT NULL UNIQUE,
@@ -169,26 +170,34 @@ CREATE TABLE refresh_tokens (
 );
 
 -- ── Indexes ──────────────────────────────────────────────────
-CREATE INDEX idx_events_starts_at        ON events(starts_at);
-CREATE INDEX idx_photos_category         ON photos(category);
-CREATE INDEX idx_photos_featured         ON photos(is_featured);
-CREATE INDEX idx_gear_available          ON gear(is_available);
-CREATE INDEX idx_loans_gear              ON gear_loans(gear_id) WHERE returned_at IS NULL;
-CREATE INDEX idx_loans_member            ON gear_loans(member_id) WHERE returned_at IS NULL;
-CREATE INDEX idx_announcements_active    ON announcements(is_active, sort_order);
-CREATE INDEX idx_contact_unread          ON contact_messages(is_read, created_at);
-CREATE INDEX idx_applications_status     ON applications(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_events_starts_at     ON events(starts_at);
+CREATE INDEX IF NOT EXISTS idx_photos_category      ON photos(category);
+CREATE INDEX IF NOT EXISTS idx_photos_featured      ON photos(is_featured);
+CREATE INDEX IF NOT EXISTS idx_gear_available       ON gear(is_available);
+CREATE INDEX IF NOT EXISTS idx_loans_gear           ON gear_loans(gear_id)   WHERE returned_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_loans_member         ON gear_loans(member_id) WHERE returned_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(is_active, sort_order);
+CREATE INDEX IF NOT EXISTS idx_contact_unread       ON contact_messages(is_read, created_at);
+CREATE INDEX IF NOT EXISTS idx_applications_status  ON applications(status, created_at);
 
--- ── Seed announcements ───────────────────────────────────────
+-- ── Seed: announcements ───────────────────────────────────────
 INSERT INTO announcements (label, sort_order) VALUES
   ('Rangeen Pixels Photography Club — Est. 2019', 1),
   ('Monthly Photowalks — Every First Saturday',   2),
   ('Annual Exhibition — Spring 2026',              3),
   ('Workshop: Studio Lighting — Register Now',     4),
-  ('47 Active Members This Semester',              5);
+  ('47 Active Members This Semester',              5)
+ON CONFLICT DO NOTHING;
 
--- ── Seed sample events ───────────────────────────────────────
+-- ── Seed: sample events ───────────────────────────────────────
 INSERT INTO events (title, location, description, starts_at, event_type, max_spots) VALUES
-  ('April Photowalk — Old City', 'Old City Gate, 7:00 AM', 'Golden hour walk through the old city lanes. Bring your camera and a charged battery.', NOW() + INTERVAL '10 days', 'photowalk', 20),
-  ('Studio Lighting Workshop',   'Club Studio, Room 204',  'Learn 3-point lighting with Profoto B10 strobes. Hands-on session for all levels.',       NOW() + INTERVAL '18 days', 'workshop',  12),
-  ('Spring Exhibition 2026',     'Main Hall Gallery',      'Annual showcase of the best member work from the past year. Open to the public.',          NOW() + INTERVAL '30 days', 'exhibition', NULL);
+  ('April Photowalk — Old City', 'Old City Gate, 7:00 AM',
+   'Golden hour walk through the old city lanes. Bring your camera and a charged battery.',
+   NOW() + INTERVAL '10 days', 'photowalk', 20),
+  ('Studio Lighting Workshop',   'Club Studio, Room 204',
+   'Learn 3-point lighting with Profoto B10 strobes. Hands-on session for all levels.',
+   NOW() + INTERVAL '18 days', 'workshop', 12),
+  ('Spring Exhibition 2026',     'Main Hall Gallery',
+   'Annual showcase of the best member work from the past year. Open to the public.',
+   NOW() + INTERVAL '30 days', 'exhibition', NULL)
+ON CONFLICT DO NOTHING;

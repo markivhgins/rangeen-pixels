@@ -58,7 +58,7 @@ app.use(requestLogger);
 /* ---------------- Rate Limiting ---------------- */
 app.use('/api', apiLimiter);
 app.use('/api/auth', authLimiter);
-app.use('/api/contact', joinLimiter);
+app.use('/api/contact', apiLimiter);
 
 /* ---------------- API Routes ---------------- */
 app.use('/api/sections', sectionsRouter);
