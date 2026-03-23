@@ -22,12 +22,12 @@ router.get('/', async (req, res, next) => {
     const { role } = req.query;
     const rows = await db.query(
       `SELECT id, name, committee_role AS role, avatar_emoji AS avatar, is_active
-       FROM members
-       WHERE is_active = true
-         AND ($1::text IS NULL OR role = $1)
-       ORDER BY
-         CASE role WHEN 'admin' THEN 0 WHEN 'committee' THEN 1 ELSE 2 END,
-         joined_at ASC`,
+ FROM members
+ WHERE is_active = true
+   AND ($1::text IS NULL OR committee_role = $1)
+ ORDER BY
+   CASE committee_role WHEN 'admin' THEN 0 WHEN 'committee' THEN 1 ELSE 2 END,
+   joined_at ASC`,
       [role || null]
     );
     res.json(rows);
@@ -47,7 +47,7 @@ router.get('/:id', async (req, res, next) => {
 });
 
 // ── POST /api/members/apply — public join form ───────────────
-router.post('/apply', joinLimiter, async (req, res, next) => {
+router.post('/apply', async (req, res, next) => {
   try {
     const { name, email, level, bio } = req.body;
     if (!name || !email) return res.status(400).json({ error: 'Name and email required' });

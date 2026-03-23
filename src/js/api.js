@@ -54,10 +54,9 @@ export async function getFaculty() {
 }
 
 export async function getAchievements() {
-  try { return await request('/achievements'); }
+  try { return await request('/awards'); }   
   catch { return LocalData.ACHIEVEMENTS; }
 }
-
 export async function getGalleryCategories() {
   try { return await request('/gallery/categories'); }
   catch { return LocalData.GALLERY_CATEGORIES; }
