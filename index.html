@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Rangeen Pixels — Photography Club</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/src/css/main.css">
+</head>
+<body>
+
+<!-- ══ HORIZONTAL FILM STRIP ══ -->
+<div class="film-bg" aria-hidden="false" id="filmBg">
+  <div class="film-strip-track" id="filmTrack"></div>
+  <div class="film-fade-l"></div>
+  <div class="film-fade-r"></div>
+</div>
+
+<!-- ══ FILM FRAME POPUP ══ -->
+<div id="film-popup">
+  <button class="fp-close" id="fpClose">[ ✕ ]</button>
+  <div class="fp-tag"    id="fpTag"></div>
+  <div class="fp-title"  id="fpTitle"></div>
+  <div class="fp-body"   id="fpBody"></div>
+  <div class="fp-footer" id="fpFooter"></div>
+</div>
+
+<!-- ══ INTRO ══ -->
+<div id="intro">
+  <div class="intro-logo">Rangeen Pixels</div>
+  <div class="intro-line"></div>
+  <div class="intro-sub">◆ &nbsp; College Photography Club &nbsp; ◆</div>
+</div>
+<div id="flash"></div>
+
+<!-- ══ TICKER ══ -->
+<div class="ticker"><div class="ticker-track"><!-- populated by ticker.js --></div></div>
+
+<!-- ══ DARK VIGNETTE ══ -->
+<div id="lens-vignette"></div>
+
+<!-- ══ FIXED PORTAL — lens-asm teleports here when expanding ══ -->
+<div id="lens-portal"></div>
+
+<!-- ══ CLOSE PILL ══ -->
+<button id="lens-close">[ ESC ] CLOSE LENS</button>
+
+<!-- ══ SCENE ══ -->
+<div id="scene">
+  <div class="cam-wrap" id="camWrap">
+    <div class="cam-col" id="camCol">
+      <div class="cam-body" id="camBody">
+
+        <!-- TOP DECK -->
+        <div class="cam-top-deck">
+          <div class="cam-mode-dial" id="refreshBtn">
+            <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </div>
+          <div class="cam-pentaprism"></div>
+          <div class="cam-pentaprism-logo">Nikon</div>
+          <div class="cam-top-lcd">
+            <div class="cam-top-lcd-text">1/250<br>F5.6<br>ISO400</div>
+          </div>
+          <div class="cam-deck-right">
+            <div class="led"></div>
+            <div class="cam-rear-dial"></div>
+            <div class="shutter-btn" id="shutterBtn"></div>
+          </div>
+        </div>
+
+        <!-- MAIN BODY -->
+        <div class="cam-main">
+          <div class="cam-lens-section" id="lensSection">
+            <div class="cam-brand-label">
+              <div class="cam-brand">Rangeen Pixels</div>
+              <div class="cam-spec">D7500 · AF-S · 18–140mm</div>
+            </div>
+
+            <!-- ★ THE LENS — teleported on expand ★ -->
+            <div class="lens-asm" id="lensAsm">
+              <div class="lens-glow"></div>
+              <div class="ring r-outer"></div>
+              <div class="ring r-mid"></div>
+              <div class="ring r-inner"></div>
+              <div id="lens-flash"></div>
+
+              <div class="iris">
+                <div class="glass" id="lensGlass">
+                  <div class="blades" id="shutterBlades">
+                    <div class="blade"></div><div class="blade"></div>
+                    <div class="blade"></div><div class="blade"></div>
+                    <div class="blade"></div><div class="blade"></div>
+                    <div class="blade"></div><div class="blade"></div>
+                  </div>
+                  <div class="lens-int" id="lensInt">
+                    <div class="lens-bg"></div>
+                    <div class="flare fl1"></div><div class="flare fl2"></div>
+                    <div class="fl3"></div><div class="fl4"></div>
+                    <div class="dust"></div>
+                    <div class="hud">
+                      <div class="hud-h"></div><div class="hud-v"></div>
+                      <div class="hud-c tl"></div><div class="hud-c tr"></div>
+                      <div class="hud-c bl"></div><div class="hud-c br"></div>
+                    </div>
+
+                    <!-- ★ PIP-BOY CIRCULAR INFO DISPLAY ★ -->
+                    <div id="circ-info">
+                      <div class="ci-glass"></div>
+                      <div class="ci-phosphor-glow"></div>
+                      <div class="ci-scanlines"></div>
+                      <div class="ci-vignette"></div>
+                      <div class="ci-arc-wrap">
+                        <svg viewBox="0 0 100 100">
+                          <circle class="ci-arc-track" cx="50" cy="50" r="48"/>
+                          <circle class="ci-arc-fill" id="ciArcFill" cx="50" cy="50" r="48"/>
+                        </svg>
+                      </div>
+                      <div class="ci-ticks">
+                        <svg viewBox="0 0 100 100" id="ciTicksSvg"></svg>
+                      </div>
+                      <div class="ci-content">
+                        <div class="ci-idle" id="ciIdle">
+                          <div class="ci-ch-wrap">
+                            <div class="ci-ch"></div>
+                            <div class="ci-ring-pulse"></div>
+                          </div>
+                          <div class="ci-idle-lbl">Tap icon<br>to explore</div>
+                        </div>
+                        <div class="ci-card gone" id="ciCard">
+                          <div class="ci-eyebrow" id="ciEyebrow"></div>
+                          <div class="ci-icon-ring" id="ciIcon"></div>
+                          <div class="ci-name"    id="ciName"></div>
+                          <div class="ci-desc"    id="ciDesc"></div>
+                          <div class="ci-stats"   id="ciStats"></div>
+                          <button class="ci-open-btn" id="ciOpenBtn">OPEN ◆</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <svg class="iris-deco" viewBox="0 0 100 100" aria-hidden="true">
+                      <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(57,255,143,.3)" stroke-width=".6"/>
+                      <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(57,255,143,.12)" stroke-width=".3"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ★ NAV RADIAL ★ -->
+              <nav class="nav-radial" id="navRadial" aria-label="Navigation">
+                <a class="nav-item" data-key="gallery"      href="#gallery"      aria-label="Gallery">      <span class="ico"></span><span class="nav-lbl">Gallery</span></a>
+                <a class="nav-item" data-key="events"       href="#events"       aria-label="Events">       <span class="ico"></span><span class="nav-lbl">Events</span></a>
+                <a class="nav-item" data-key="members"      href="#members"      aria-label="Members">      <span class="ico"></span><span class="nav-lbl">Members</span></a>
+                <a class="nav-item" data-key="about"        href="#about"        aria-label="About">        <span class="ico"></span><span class="nav-lbl">About</span></a>
+                <a class="nav-item" data-key="faculty"      href="#faculty"      aria-label="Faculty">      <span class="ico"></span><span class="nav-lbl">Faculty</span></a>
+                <a class="nav-item" data-key="achievements" href="#achievements" aria-label="Achievements"> <span class="ico"></span><span class="nav-lbl">Achieve</span></a>
+                <a class="nav-item" data-key="contact"      href="#contact"      aria-label="Contact">      <span class="ico"></span><span class="nav-lbl">Contact</span></a>
+                <a class="nav-item center" id="homeBtn" href="#" aria-label="Open lens view">
+                  <span class="ico">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                      <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/>
+                      <line x1="12" y1="2.5" x2="12" y2="8.5"/><line x1="12" y1="15.5" x2="12" y2="21.5"/>
+                      <line x1="2.5" y1="12" x2="8.5" y2="12"/><line x1="15.5" y1="12" x2="21.5" y2="12"/>
+                    </svg>
+                  </span>
+                </a>
+              </nav>
+            </div><!-- /lens-asm -->
+          </div><!-- /lens-section -->
+
+          <!-- GRIP -->
+          <div class="cam-grip">
+            <div class="cam-lcd"><div class="cam-lcd-text">ISO<br>400</div></div>
+            <div class="knob" id="navUp"><svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg></div>
+            <div class="knob" id="navDn"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+            <div class="cam-grip-label">D7500</div>
+          </div>
+        </div>
+
+        <div class="cam-bottom">
+          <div class="cam-rd g">EXP — 036</div>
+          <div class="cam-ap">ƒ/1.4</div>
+          <div class="cam-rd s">ISO 400 · 1/125s</div>
+        </div>
+      </div><!-- /cam-body -->
+
+      <div class="hint" id="hintText">— CLICK ◎ TO EXPAND · TAP ICONS TO EXPLORE —</div>
+    </div><!-- /cam-col -->
+  </div>
+</div>
+
+<!-- ══ PANEL OVERLAY ══ -->
+<div class="panel-ov" id="panelOv">
+  <div class="panel" id="panelEl">
+    <button class="panel-close" id="panelClose">[ CLOSE ✕ ]</button>
+    <div id="panelIn"></div>
+  </div>
+</div>
+
+<!-- ══ MODULE ENTRY POINT ══ -->
+<script type="module" src="/src/js/main.js"></script>
+</body>
+</html>
