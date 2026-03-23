@@ -1,54 +1,69 @@
 -- ═══════════════════════════════════════════════════════════
--- Rangeen Pixels Photography Club — Database Schema
--- Run once: psql -d rangeen_pixels -f schema.sql
+-- Rangeen Pixels — DROP EVERYTHING & RECREATE
+-- Run this in Supabase SQL Editor to start fresh.
+-- WARNING: This deletes ALL data permanently.
 -- ═══════════════════════════════════════════════════════════
 
+-- ── Drop all tables ───────────────────────────────────────────
+DROP TABLE IF EXISTS contact_messages  CASCADE;
+DROP TABLE IF EXISTS refresh_tokens    CASCADE;
+DROP TABLE IF EXISTS gear_loans        CASCADE;
+DROP TABLE IF EXISTS rsvps             CASCADE;
+DROP TABLE IF EXISTS photos            CASCADE;
+DROP TABLE IF EXISTS awards            CASCADE;
+DROP TABLE IF EXISTS announcements     CASCADE;
+DROP TABLE IF EXISTS workshops         CASCADE;
+DROP TABLE IF EXISTS gear              CASCADE;
+DROP TABLE IF EXISTS events            CASCADE;
+DROP TABLE IF EXISTS applications      CASCADE;
+DROP TABLE IF EXISTS members           CASCADE;
+
 -- ── Extensions ───────────────────────────────────────────────
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";   -- gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ── Members ──────────────────────────────────────────────────
 CREATE TABLE members (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name            TEXT NOT NULL,
   email           TEXT NOT NULL UNIQUE,
-  password_hash   TEXT,                            -- NULL for members added by admin before self-signup
+  password_hash   TEXT,
   student_id      TEXT UNIQUE,
-  role            TEXT NOT NULL DEFAULT 'member',  -- 'member' | 'committee' | 'admin'
-  committee_role  TEXT,                            -- 'President', 'Events Lead', etc.
+  role            TEXT NOT NULL DEFAULT 'member',
+  committee_role  TEXT,
   avatar_emoji    TEXT DEFAULT '📷',
-  experience      TEXT,                            -- 'beginner' | 'hobbyist' | 'intermediate' | 'advanced'
+  experience      TEXT,
   bio             TEXT,
   is_active       BOOLEAN DEFAULT true,
   joined_at       TIMESTAMPTZ DEFAULT NOW(),
   dues_paid_until DATE
 );
 
--- ── Member applications (pending join requests) ──────────────
+-- ── Member applications ───────────────────────────────────────
 CREATE TABLE applications (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name       TEXT NOT NULL,
-  email      TEXT NOT NULL,
-  level      TEXT,
-  bio        TEXT,
-  status     TEXT DEFAULT 'pending',             -- 'pending' | 'approved' | 'rejected'
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  reviewed_at TIMESTAMPTZ,
-  reviewed_by UUID REFERENCES members(id)
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name         TEXT NOT NULL,
+  email        TEXT NOT NULL,
+  level        TEXT,
+  bio          TEXT,
+  status       TEXT DEFAULT 'pending',
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  reviewed_at  TIMESTAMPTZ,
+  reviewed_by  UUID REFERENCES members(id)
 );
 
 -- ── Events ───────────────────────────────────────────────────
 CREATE TABLE events (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title       TEXT NOT NULL,
-  location    TEXT,
-  description TEXT,
-  starts_at   TIMESTAMPTZ NOT NULL,
-  ends_at     TIMESTAMPTZ,
-  event_type  TEXT DEFAULT 'photowalk',           -- 'photowalk' | 'workshop' | 'exhibition' | 'critique'
-  is_public   BOOLEAN DEFAULT true,
-  max_spots   INT,
-  created_by  UUID REFERENCES members(id),
-  created_at  TIMESTAMPTZ DEFAULT NOW()
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title        TEXT NOT NULL,
+  location     TEXT,
+  description  TEXT,
+  starts_at    TIMESTAMPTZ NOT NULL,
+  ends_at      TIMESTAMPTZ,
+  event_type   TEXT DEFAULT 'photowalk',
+  is_public    BOOLEAN DEFAULT true,
+  max_spots    INT,
+  created_by   UUID REFERENCES members(id),
+  created_at   TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ── Event RSVPs ──────────────────────────────────────────────
@@ -56,7 +71,7 @@ CREATE TABLE rsvps (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   event_id   UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
   member_id  UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
-  status     TEXT DEFAULT 'going',               -- 'going' | 'maybe' | 'cancelled'
+  status     TEXT DEFAULT 'going',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(event_id, member_id)
 );
@@ -69,7 +84,7 @@ CREATE TABLE workshops (
   description  TEXT,
   instructor   UUID REFERENCES members(id),
   is_active    BOOLEAN DEFAULT true,
-  semester     TEXT,                             -- e.g. 'Spring 2026'
+  semester     TEXT,
   created_at   TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -79,22 +94,22 @@ CREATE TABLE photos (
   member_id    UUID NOT NULL REFERENCES members(id),
   title        TEXT,
   description  TEXT,
-  filename     TEXT NOT NULL,                    -- stored filename in object storage
-  url          TEXT NOT NULL,                    -- CDN / storage URL
-  category     TEXT,                             -- 'Golden Hour' | 'Street' | etc.
+  filename     TEXT NOT NULL,
+  url          TEXT NOT NULL,
+  category     TEXT,
   is_featured  BOOLEAN DEFAULT false,
   shot_at      TIMESTAMPTZ,
   uploaded_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── Gear (equipment library) ─────────────────────────────────
+-- ── Gear ─────────────────────────────────────────────────────
 CREATE TABLE gear (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   icon         TEXT DEFAULT '📷',
   name         TEXT NOT NULL,
   description  TEXT,
-  category     TEXT,                             -- 'camera' | 'lighting' | 'lens' | 'darkroom'
-  condition    TEXT DEFAULT 'good',              -- 'excellent' | 'good' | 'fair' | 'repair'
+  category     TEXT,
+  condition    TEXT DEFAULT 'good',
   is_available BOOLEAN DEFAULT true,
   added_at     TIMESTAMPTZ DEFAULT NOW()
 );
@@ -117,13 +132,13 @@ CREATE TABLE awards (
   description  TEXT,
   year         INT,
   winner_id    UUID REFERENCES members(id),
-  winner_name  TEXT,                             -- for non-member winners / historical
-  level        TEXT DEFAULT 'national',          -- 'local' | 'national' | 'international'
+  winner_name  TEXT,
+  level        TEXT DEFAULT 'national',
   awarded_at   DATE,
   created_at   TIMESTAMPTZ DEFAULT NOW()
 );
 
--- ── Announcements (ticker + notifications) ───────────────────
+-- ── Announcements ────────────────────────────────────────────
 CREATE TABLE announcements (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   label      TEXT NOT NULL,
@@ -133,7 +148,18 @@ CREATE TABLE announcements (
   expires_at TIMESTAMPTZ
 );
 
--- ── Auth tokens (for admin login) ────────────────────────────
+-- ── Contact messages ─────────────────────────────────────────
+CREATE TABLE contact_messages (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name       TEXT NOT NULL,
+  email      TEXT NOT NULL,
+  subject    TEXT,
+  message    TEXT NOT NULL,
+  is_read    BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── Auth tokens ───────────────────────────────────────────────
 CREATE TABLE refresh_tokens (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   member_id  UUID NOT NULL REFERENCES members(id) ON DELETE CASCADE,
@@ -143,18 +169,26 @@ CREATE TABLE refresh_tokens (
 );
 
 -- ── Indexes ──────────────────────────────────────────────────
-CREATE INDEX idx_events_starts_at  ON events(starts_at);
-CREATE INDEX idx_photos_category   ON photos(category);
-CREATE INDEX idx_photos_featured   ON photos(is_featured);
-CREATE INDEX idx_gear_available    ON gear(is_available);
-CREATE INDEX idx_loans_gear        ON gear_loans(gear_id) WHERE returned_at IS NULL;
-CREATE INDEX idx_loans_member      ON gear_loans(member_id) WHERE returned_at IS NULL;
-CREATE INDEX idx_announcements_active ON announcements(is_active, sort_order);
+CREATE INDEX idx_events_starts_at        ON events(starts_at);
+CREATE INDEX idx_photos_category         ON photos(category);
+CREATE INDEX idx_photos_featured         ON photos(is_featured);
+CREATE INDEX idx_gear_available          ON gear(is_available);
+CREATE INDEX idx_loans_gear              ON gear_loans(gear_id) WHERE returned_at IS NULL;
+CREATE INDEX idx_loans_member            ON gear_loans(member_id) WHERE returned_at IS NULL;
+CREATE INDEX idx_announcements_active    ON announcements(is_active, sort_order);
+CREATE INDEX idx_contact_unread          ON contact_messages(is_read, created_at);
+CREATE INDEX idx_applications_status     ON applications(status, created_at);
 
 -- ── Seed announcements ───────────────────────────────────────
 INSERT INTO announcements (label, sort_order) VALUES
   ('Rangeen Pixels Photography Club — Est. 2019', 1),
-  ('Monthly Photowalks — Every First Saturday', 2),
-  ('Annual Exhibition — Spring 2026', 3),
-  ('Workshop: Studio Lighting — Register Now', 4),
-  ('47 Active Members This Semester', 5);
+  ('Monthly Photowalks — Every First Saturday',   2),
+  ('Annual Exhibition — Spring 2026',              3),
+  ('Workshop: Studio Lighting — Register Now',     4),
+  ('47 Active Members This Semester',              5);
+
+-- ── Seed sample events ───────────────────────────────────────
+INSERT INTO events (title, location, description, starts_at, event_type, max_spots) VALUES
+  ('April Photowalk — Old City', 'Old City Gate, 7:00 AM', 'Golden hour walk through the old city lanes. Bring your camera and a charged battery.', NOW() + INTERVAL '10 days', 'photowalk', 20),
+  ('Studio Lighting Workshop',   'Club Studio, Room 204',  'Learn 3-point lighting with Profoto B10 strobes. Hands-on session for all levels.',       NOW() + INTERVAL '18 days', 'workshop',  12),
+  ('Spring Exhibition 2026',     'Main Hall Gallery',      'Annual showcase of the best member work from the past year. Open to the public.',          NOW() + INTERVAL '30 days', 'exhibition', NULL);

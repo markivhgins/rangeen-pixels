@@ -1,13 +1,5 @@
 /**
  * server.js  — Rangeen Pixels Club Backend
- * ─────────────────────────────────────────────────────────────
- * Stack: Node.js · Express · PostgreSQL (via pg)
- * Auth:  JWT (jsonwebtoken)
- * Email: Nodemailer (for join confirmations)
- *
- * Start: node server.js   or   npm start
- * Dev:   nodemon server.js
- * ─────────────────────────────────────────────────────────────
  */
 
 import 'dotenv/config';
@@ -27,29 +19,27 @@ import galleryRouter        from './backend/routes/gallery.js';
 import awardsRouter         from './backend/routes/awards.js';
 import authRouter           from './backend/routes/auth.js';
 import announcementsRouter  from './backend/routes/announcements.js';
+import contactRouter        from './backend/routes/contact.js';
 import { errorHandler }     from './backend/middleware/error-handler.js';
 import { requestLogger }    from './backend/middleware/logger.js';
-import { apiLimiter, authLimiter } from './backend/middleware/rate-limit.js';
+import { apiLimiter, authLimiter, joinLimiter } from './backend/middleware/rate-limit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ── Middleware ───────────────────────────────────────────────
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173' }));
 app.use(compression());
 app.use(express.json());
 app.use(requestLogger);
 
-// ── Static frontend (after build) ────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ── Rate limiting ─────────────────────────────────────────────
 app.use('/api', apiLimiter);
 app.use('/api/auth', authLimiter);
+app.use('/api/contact', joinLimiter);
 
-// ── API Routes ───────────────────────────────────────────────
 app.use('/api/sections',       sectionsRouter);
 app.use('/api/events',         eventsRouter);
 app.use('/api/members',        membersRouter);
@@ -59,14 +49,10 @@ app.use('/api/gallery',        galleryRouter);
 app.use('/api/awards',         awardsRouter);
 app.use('/api/auth',           authRouter);
 app.use('/api/announcements',  announcementsRouter);
+app.use('/api/contact',        contactRouter);
 
-// ── Health check ─────────────────────────────────────────────
 app.get('/api/health', (_, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
-
-// ── SPA fallback ─────────────────────────────────────────────
 app.get('*', (_, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-
-// ── Error handler ────────────────────────────────────────────
 app.use(errorHandler);
 
-app.listen(PORT, () => console.log(`🎞  Rangeen Pixels server → http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Rangeen Pixels server running on port ${PORT}`));
