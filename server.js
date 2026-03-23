@@ -18,25 +18,25 @@ import compression from 'compression';
 import path        from 'path';
 import { fileURLToPath } from 'url';
 
-import sectionsRouter       from './api/routes/sections.js';
-import eventsRouter         from './api/routes/events.js';
-import membersRouter        from './api/routes/members.js';
-import gearRouter           from './api/routes/gear.js';
-import workshopsRouter      from './api/routes/workshops.js';
-import galleryRouter        from './api/routes/gallery.js';
-import awardsRouter         from './api/routes/awards.js';
-import authRouter           from './api/routes/auth.js';
-import announcementsRouter  from './api/routes/announcements.js';
-import { errorHandler }     from './api/middleware/error-handler.js';
-import { requestLogger }    from './api/middleware/logger.js';
-import { apiLimiter, authLimiter } from './api/middleware/rate-limit.js';
+import sectionsRouter       from './backend/routes/sections.js';
+import eventsRouter         from './backend/routes/events.js';
+import membersRouter        from './backend/routes/members.js';
+import gearRouter           from './backend/routes/gear.js';
+import workshopsRouter      from './backend/routes/workshops.js';
+import galleryRouter        from './backend/routes/gallery.js';
+import awardsRouter         from './backend/routes/awards.js';
+import authRouter           from './backend/routes/auth.js';
+import announcementsRouter  from './backend/routes/announcements.js';
+import { errorHandler }     from './backend/middleware/error-handler.js';
+import { requestLogger }    from './backend/middleware/logger.js';
+import { apiLimiter, authLimiter } from './backend/middleware/rate-limit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Middleware ───────────────────────────────────────────────
-app.use(helmet({ contentSecurityPolicy: false })); // Relax for dev; tighten for prod
+app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173' }));
 app.use(compression());
 app.use(express.json());
