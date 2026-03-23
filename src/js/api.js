@@ -49,7 +49,7 @@ export async function getMembers() {
 }
 
 export async function getFaculty() {
-  try { return await request('/members?role=faculty'); }
+  try { return await request('/members?role=faculty'); }  // role query is fine
   catch { return LocalData.FACULTY; }
 }
 
